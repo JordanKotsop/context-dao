@@ -118,7 +118,7 @@ export default async function SkillDetailPage({
         {/* Pricing */}
         <section className="mb-10">
           <h2 className="mb-4 text-xl font-semibold">Pricing</h2>
-          <PricingTable metadata={metadata} />
+          <PricingTable metadata={metadata} slug={slug} />
         </section>
 
         {/* Tags */}
