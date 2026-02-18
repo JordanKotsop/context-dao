@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { withX402 } from "x402-next";
 import { getSkillBySlug } from "@/lib/skills";
 import { x402Config } from "@/lib/x402";
+import { runInference } from "@/lib/llm-client";
+import {
+  wrapSystemPrompt,
+  sanitizeResponse,
+  isMetaQuery,
+} from "@/lib/leak-guard";
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   const segments = request.nextUrl.pathname.split("/");
@@ -15,26 +21,61 @@ async function handler(request: NextRequest): Promise<NextResponse> {
 
   const body = await request.json().catch(() => null);
   const userPrompt = body?.prompt;
+  const model = body?.model;
 
-  if (!userPrompt) {
+  if (!userPrompt || typeof userPrompt !== "string") {
     return NextResponse.json(
-      { error: "Missing 'prompt' in request body" },
+      { error: "Missing 'prompt' string in request body" },
       { status: 400 }
     );
   }
+
+  // Leak guard: detect meta-queries attempting to extract system prompt
+  if (isMetaQuery(userPrompt)) {
+    return NextResponse.json({
+      type: "rent",
+      slug: skill.slug,
+      skill_name: skill.metadata.name,
+      response:
+        "I can help you with questions in my area of expertise, but I cannot share my underlying instructions.",
+      tokens_used: 0,
+      latency_ms: 0,
+      meta_query_blocked: true,
+    });
+  }
+
+  // Check if Anthropic API key is configured
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json(
+      {
+        error: "Inference not available — ANTHROPIC_API_KEY not configured",
+        hint: "Add ANTHROPIC_API_KEY to .env.local to enable blind inference",
+      },
+      { status: 503 }
+    );
+  }
+
+  // Run blind inference
+  const wrappedPrompt = wrapSystemPrompt(skill.content);
+
+  const result = await runInference({
+    systemPrompt: wrappedPrompt,
+    userPrompt,
+    model,
+  });
+
+  // Post-processing: sanitize response for any leaked prompt content
+  const sanitized = sanitizeResponse(skill.content, result.response);
 
   return NextResponse.json({
     type: "rent",
     slug: skill.slug,
     skill_name: skill.metadata.name,
-    user_prompt: userPrompt,
-    response:
-      "[Blind Inference Runner not yet implemented — Feature #5] " +
-      "Payment verified. In production, this would inject the hidden " +
-      `system prompt from '${skill.metadata.name}' and return the ` +
-      "LLM response without exposing the source.",
-    tokens_used: null,
-    latency_ms: null,
+    response: sanitized,
+    model: result.model,
+    tokens_in: result.tokens_in,
+    tokens_out: result.tokens_out,
+    latency_ms: result.latency_ms,
   });
 }
 
@@ -42,6 +83,7 @@ export const POST = withX402(handler, x402Config.walletAddress, {
   price: "$0.01",
   network: x402Config.network,
   config: {
-    description: "Rent: Single blind inference call against this cognitive asset",
+    description:
+      "Rent: Single blind inference call against this cognitive asset",
   },
 });
