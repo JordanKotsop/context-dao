@@ -1,22 +1,20 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useWalletClient, useSwitchChain } from "wagmi";
+import { getWalletClient as getWalletClientAction } from "wagmi/actions";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 import { ExactEvmSchemeV1, EVM_NETWORK_CHAIN_ID_MAP } from "@x402/evm/v1";
 import type { WalletClient } from "viem";
-
-// Map of V1 network names to chain IDs, used for auto-switching
-type EvmNetworkV1 = keyof typeof EVM_NETWORK_CHAIN_ID_MAP;
+import { wagmiConfig } from "@/lib/wagmi-config";
 
 /**
  * Adapts a wagmi WalletClient to the x402 ClientEvmSigner interface.
- * wagmi puts address on walletClient.account.address, but x402 expects it at top level.
  *
- * Critically, this adapter intercepts signTypedData to auto-switch chains when the
- * EIP-712 domain.chainId doesn't match the wallet's current chain. Without this,
- * viem throws: "chainId should be same as current chainId".
+ * After chain switching, fetches a FRESH walletClient via wagmi's imperative
+ * getWalletClient action to avoid stale closures where the old client still
+ * references the previous chain.
  */
 function toX402Signer(
   walletClient: WalletClient,
@@ -30,14 +28,13 @@ function toX402Signer(
       primaryType: string;
       message: Record<string, unknown>;
     }) => {
-      // Extract the target chainId from the EIP-712 domain
       const domainChainId = message.domain?.chainId
         ? Number(message.domain.chainId)
         : undefined;
 
-      // If the domain specifies a chainId different from the wallet's current chain,
-      // switch chains before signing. This is the core fix for the
-      // "chainId should be same as current chainId" error.
+      // Use the current client by default; replace with fresh one after switching
+      let signingClient = walletClient;
+
       if (domainChainId && walletClient.chain?.id !== domainChainId) {
         if (!switchChainAsync) {
           throw new Error(
@@ -47,9 +44,13 @@ function toX402Signer(
         }
         try {
           await switchChainAsync({ chainId: domainChainId });
+          // Get a FRESH wallet client after chain switch.
+          // The hook-based walletClient is stale at this point (React hasn't
+          // re-rendered), so we use wagmi's imperative action instead.
+          signingClient = await getWalletClientAction(wagmiConfig, {
+            chainId: domainChainId,
+          });
         } catch (err) {
-          // If the user rejects the chain switch, or the chain isn't configured,
-          // give a clear error message
           const reason = err instanceof Error ? err.message : String(err);
           throw new Error(
             `Failed to switch to chain ${domainChainId}: ${reason}. ` +
@@ -58,10 +59,10 @@ function toX402Signer(
         }
       }
 
-      return walletClient.signTypedData({
-        account: walletClient.account!,
-        domain: message.domain as Parameters<typeof walletClient.signTypedData>[0]["domain"],
-        types: message.types as Parameters<typeof walletClient.signTypedData>[0]["types"],
+      return signingClient.signTypedData({
+        account: signingClient.account!,
+        domain: message.domain as Parameters<typeof signingClient.signTypedData>[0]["domain"],
+        types: message.types as Parameters<typeof signingClient.signTypedData>[0]["types"],
         primaryType: message.primaryType,
         message: message.message,
       });
@@ -88,46 +89,12 @@ export function useX402Payment() {
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Memoize the payment-wrapped fetch so it's not recreated on every call.
-  // Note: switchChainAsync is included in deps so the signer always has the
-  // latest chain-switching capability.
-  const fetchWithPayment = useMemo(() => {
-    if (!walletClient) return null;
-
-    const signer = toX402Signer(walletClient, switchChainAsync);
-
-    // Register all V1 network names from @x402/evm so the client can match
-    // any V1 network the server might return (not just "base-sepolia").
-    const v1Schemes = Object.keys(EVM_NETWORK_CHAIN_ID_MAP).map(
-      (networkName) => ({
-        network: networkName as `${string}:${string}`,
-        client: new ExactEvmSchemeV1(signer),
-        x402Version: 1 as const,
-      })
-    );
-
-    return wrapFetchWithPaymentFromConfig(fetch, {
-      schemes: [
-        {
-          // V2: CAIP-2 wildcard for all EVM chains (future-proof)
-          network: "eip155:*",
-          client: new ExactEvmScheme(signer),
-        },
-        // V1: Register all supported V1 network names.
-        // x402-next v1.1.0 uses plain names like "base-sepolia", "base", etc.
-        // The type cast is needed because TS types expect CAIP-2 format,
-        // but V1 protocol uses plain network names.
-        ...v1Schemes,
-      ],
-    });
-  }, [walletClient, switchChainAsync]);
-
   const pay = useCallback(
     async <T = unknown>(
       url: string,
       options?: RequestInit
     ): Promise<PaymentResult<T>> => {
-      if (!walletClient || !fetchWithPayment) {
+      if (!walletClient) {
         setError("Wallet not connected");
         setStatus("error");
         return { data: null, status: "error", error: "Wallet not connected" };
@@ -137,6 +104,24 @@ export function useX402Payment() {
       setError(null);
 
       try {
+        // Create signer and fetch wrapper fresh each call to avoid stale closures
+        const signer = toX402Signer(walletClient, switchChainAsync);
+
+        const v1Schemes = Object.keys(EVM_NETWORK_CHAIN_ID_MAP).map(
+          (networkName) => ({
+            network: networkName as `${string}:${string}`,
+            client: new ExactEvmSchemeV1(signer),
+            x402Version: 1 as const,
+          })
+        );
+
+        const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+          schemes: [
+            { network: "eip155:*", client: new ExactEvmScheme(signer) },
+            ...v1Schemes,
+          ],
+        });
+
         const response = await fetchWithPayment(url, options);
 
         setStatus("processing");
@@ -156,17 +141,15 @@ export function useX402Payment() {
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "Payment failed";
-        // Detect user rejection from wallet
+
         const isRejection =
           msg.includes("rejected") ||
           msg.includes("denied") ||
           msg.includes("cancelled") ||
           msg.includes("User rejected");
-        // Detect insufficient funds
         const isInsufficientFunds =
           msg.includes("insufficient_funds") ||
           msg.includes("Insufficient funds");
-        // Detect chain mismatch (should be auto-handled now, but keep as fallback)
         const isChainMismatch =
           msg.includes("chainId should be same as current chainId") ||
           msg.includes("Failed to switch to chain");
@@ -187,7 +170,7 @@ export function useX402Payment() {
         return { data: null, status: "error", error: friendlyMsg };
       }
     },
-    [walletClient, fetchWithPayment]
+    [walletClient, switchChainAsync]
   );
 
   const reset = useCallback(() => {
