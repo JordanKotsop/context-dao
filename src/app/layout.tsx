@@ -8,8 +8,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Masterclass App',
-  description: 'Built with Claude Code at the Barcelona Masterclass',
+  title: 'ContextDAO — Cognitive Asset Marketplace',
+  description: 'Trade, rent, and optimize high-performance system prompts via x402 payment protocol',
 }
 
 export default function RootLayout({

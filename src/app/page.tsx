@@ -146,8 +146,8 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-wrap items-center gap-4"
             >
-              <MagneticButton href="https://docs.anthropic.com/en/docs/claude-code">
-                Open Claude Code docs
+              <MagneticButton href="/marketplace">
+                Browse Marketplace
               </MagneticButton>
             </motion.div>
             <motion.p
@@ -156,11 +156,11 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="text-white/40 text-sm"
             >
-              or type{" "}
+              or integrate via{" "}
               <code className="px-2 py-1 bg-white/10 rounded-lg text-lime font-mono text-xs">
-                claude
+                MCP
               </code>{" "}
-              in terminal to get started
+              for agent-native access
             </motion.p>
           </div>
 
