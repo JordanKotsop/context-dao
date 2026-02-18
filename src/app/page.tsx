@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { WalletButton } from "@/components/wallet-button";
 
 // Magnetic button component
 function MagneticButton({
@@ -93,8 +94,11 @@ export default function HomePage() {
             ContextDAO
           </span>
         </div>
-        <div className="px-4 py-2 border border-white/20 rounded-full text-white/60 text-sm">
-          Cognitive Assets
+        <div className="flex items-center gap-4">
+          <div className="px-4 py-2 border border-white/20 rounded-full text-white/60 text-sm hidden sm:block">
+            Cognitive Assets
+          </div>
+          <WalletButton />
         </div>
       </header>
 
