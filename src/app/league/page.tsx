@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { getActiveBounties, getAllBounties, getLeaderboard } from "@/lib/bounty";
 import { getSkillBySlug } from "@/lib/skills";
 import { BountyCard } from "@/components/league/bounty-card";
 import { LeaderboardTable } from "@/components/league/leaderboard-table";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "Validation League — ContextDAO",
@@ -37,32 +37,7 @@ export default function LeaguePage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="flex items-center justify-between border-b border-white/5 px-6 py-4 md:px-12">
-        <Link
-          href="/"
-          className="flex items-center gap-3 transition-opacity hover:opacity-80"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-lime">
-            <span className="text-sm font-bold text-black">CD</span>
-          </div>
-          <span className="hidden text-sm font-medium text-white/70 sm:block">
-            ContextDAO
-          </span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm text-white/50">
-          <span className="text-white">League</span>
-          <Link
-            href="/marketplace"
-            className="transition-colors hover:text-white/80"
-          >
-            Marketplace
-          </Link>
-          <Link href="/" className="transition-colors hover:text-white/80">
-            Home
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader activeNav="League" />
 
       <main className="mx-auto max-w-6xl px-6 py-12 md:px-12">
         {/* Hero */}
