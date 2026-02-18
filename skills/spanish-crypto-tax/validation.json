@@ -1,0 +1,66 @@
+{
+  "skill": "spanish-crypto-tax",
+  "version": "1.0.0",
+  "questions": [
+    {
+      "input": "I sold 2 BTC for €80,000 profit in Spain. What tax do I owe?",
+      "expected_output": "contains: savings income, 19%, 21%, 23%, Modelo 100, FIFO",
+      "match_type": "keyword",
+      "weight": 1.5
+    },
+    {
+      "input": "Is swapping ETH for USDC a taxable event in Spain?",
+      "expected_output": "contains: taxable, crypto-to-crypto, swap, gain, loss, FIFO",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I have €60,000 in crypto on Binance. Do I need to file Modelo 721?",
+      "expected_output": "contains: Modelo 721, €50,000, threshold, December 31, abroad",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I earn staking rewards on Ethereum. How are they taxed in Spain?",
+      "expected_output": "contains: savings income, fair market value, received, staking",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I moved to Spain from Canada last year. I'm on the Beckham Law. Does that help with my crypto taxes?",
+      "expected_output": "contains: Beckham Law, savings income, progressive rates, does not apply, crypto, capital gains",
+      "match_type": "keyword",
+      "weight": 1.5
+    },
+    {
+      "input": "What cost basis method does Spain use for crypto? Can I use LIFO?",
+      "expected_output": "contains: FIFO, First In First Out, cannot, LIFO",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I lost €30,000 on a crypto trade this year. Can I offset it against gains?",
+      "expected_output": "contains: offset, losses, savings income, carry forward, 4 years",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "What is DAC8 and how does it affect me as a crypto holder in Spain?",
+      "expected_output": "contains: DAC8, 2026, EU, reporting, exchange, automatic exchange, member states",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I provided liquidity on Uniswap and earned LP fees. Tax implications in Spain?",
+      "expected_output": "contains: liquidity pool, swap, taxable, LP, savings income, DeFi",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "When is the deadline to file my crypto taxes in Spain?",
+      "expected_output": "contains: Modelo 100, April, June, Modelo 721, January, March",
+      "match_type": "keyword",
+      "weight": 1.0
+    }
+  ]
+}

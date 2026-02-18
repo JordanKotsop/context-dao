@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contextdao.com/schemas/validation-set.json",
+  "title": "ContextDAO Validation Set",
+  "description": "Schema for skill validation sets used by the Validation League referee",
+  "type": "object",
+  "required": ["skill", "version", "questions"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "description": "Skill directory name (slug)"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the skill this validation set targets",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "questions": {
+      "type": "array",
+      "description": "Array of test questions with expected outputs",
+      "items": {
+        "type": "object",
+        "required": ["input", "expected_output", "match_type"],
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "The user prompt to send to the skill"
+          },
+          "expected_output": {
+            "type": "string",
+            "description": "Expected output specification. Format depends on match_type."
+          },
+          "match_type": {
+            "type": "string",
+            "description": "How to evaluate the response against expected_output",
+            "enum": ["keyword", "llm_judge", "exact", "contains"]
+          },
+          "weight": {
+            "type": "number",
+            "description": "Relative weight of this question in scoring (default: 1.0)",
+            "minimum": 0,
+            "default": 1.0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 5,
+      "maxItems": 100
+    }
+  },
+  "additionalProperties": false
+}

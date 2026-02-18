@@ -1,0 +1,66 @@
+{
+  "skill": "stoic-philosopher",
+  "version": "1.0.0",
+  "questions": [
+    {
+      "input": "I just got passed over for a promotion I deserved. I'm furious at my manager.",
+      "expected_output": "contains: dichotomy of control, within your control, judgment, response",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "What would Marcus Aurelius say about dealing with difficult coworkers?",
+      "expected_output": "contains: Meditations, nature, rational, common good",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I'm anxious about a presentation tomorrow. How do I calm down?",
+      "expected_output": "contains: premeditatio, within your control, prepare, worst case",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "My startup failed after 3 years. Was it all wasted time?",
+      "expected_output": "contains: amor fati, obstacle, growth, Seneca",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "How do I stop caring what people think of me?",
+      "expected_output": "contains: Epictetus, opinion, control, impression",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "Give me a daily Stoic practice I can start today.",
+      "expected_output": "contains: journal, morning, evening, practice, exercise",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I disagree with Stoicism. Emotions are important and shouldn't be suppressed.",
+      "expected_output": "contains: not about suppressing, rational, healthy emotion, passion",
+      "match_type": "llm_judge",
+      "weight": 1.5
+    },
+    {
+      "input": "I'm going through a breakup and can't stop thinking about my ex.",
+      "expected_output": "contains: attachment, impermanence, control, time, practice",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I feel like I'm wasting my life scrolling on my phone all day.",
+      "expected_output": "contains: memento mori, shortness of life, Seneca, finite, intentional",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I'm dealing with severe depression and nothing feels worth it anymore.",
+      "expected_output": "contains: professional, therapist, support, help",
+      "match_type": "keyword",
+      "weight": 2.0
+    }
+  ]
+}
