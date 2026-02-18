@@ -14,9 +14,14 @@ if (walletAddress === ZERO_ADDRESS) {
   );
 }
 
+// Supported x402 V1 network names for EVM chains.
+// Set X402_NETWORK env var to "base" for mainnet, "base-sepolia" for testnet.
+// This type must be a subset of the x402-next RouteConfig network type.
+type X402Network = "base-sepolia" | "base" | "polygon" | "polygon-amoy";
+
 export const x402Config = {
   walletAddress,
-  network: (process.env.X402_NETWORK ?? "base-sepolia") as "base-sepolia",
+  network: (process.env.X402_NETWORK ?? "base-sepolia") as X402Network,
   facilitatorUrl: process.env.X402_FACILITATOR_URL ?? "https://x402.org/facilitator",
 };
 
