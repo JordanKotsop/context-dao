@@ -36,7 +36,7 @@ export async function GET(
       },
     },
     protocol: "x402",
-    protocol_version: "2.0",
+    protocol_version: 1,
     facilitator: x402Config.facilitatorUrl,
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useWalletClient } from "wagmi";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
@@ -48,12 +48,37 @@ export function useX402Payment() {
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Memoize the payment-wrapped fetch so it's not recreated on every call
+  const fetchWithPayment = useMemo(() => {
+    if (!walletClient) return null;
+
+    const signer = toX402Signer(walletClient);
+
+    return wrapFetchWithPaymentFromConfig(fetch, {
+      schemes: [
+        {
+          // V2: CAIP-2 wildcard for all EVM chains (future-proof)
+          network: "eip155:*",
+          client: new ExactEvmScheme(signer),
+        },
+        {
+          // V1: x402-next v1.1.0 uses simple network names, not CAIP-2
+          // The type cast is required because the TS types expect CAIP-2 format,
+          // but V1 protocol uses plain network names like "base-sepolia"
+          network: "base-sepolia" as `${string}:${string}`,
+          client: new ExactEvmSchemeV1(signer),
+          x402Version: 1,
+        },
+      ],
+    });
+  }, [walletClient]);
+
   const pay = useCallback(
     async <T = unknown>(
       url: string,
       options?: RequestInit
     ): Promise<PaymentResult<T>> => {
-      if (!walletClient) {
+      if (!walletClient || !fetchWithPayment) {
         setError("Wallet not connected");
         setStatus("error");
         return { data: null, status: "error", error: "Wallet not connected" };
@@ -63,26 +88,9 @@ export function useX402Payment() {
       setError(null);
 
       try {
-        // Adapt wagmi WalletClient to x402 ClientEvmSigner interface
-        const signer = toX402Signer(walletClient);
-
-        const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
-          schemes: [
-            {
-              network: "eip155:*",
-              client: new ExactEvmScheme(signer),
-            },
-            {
-              network: "base-sepolia" as `${string}:${string}`,
-              client: new ExactEvmSchemeV1(signer),
-              x402Version: 1,
-            },
-          ],
-        });
+        const response = await fetchWithPayment(url, options);
 
         setStatus("processing");
-
-        const response = await fetchWithPayment(url, options);
 
         if (!response.ok) {
           const errBody = await response.json().catch(() => null);
@@ -99,22 +107,32 @@ export function useX402Payment() {
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "Payment failed";
-        // Detect user rejection
+        // Detect user rejection from wallet
         const isRejection =
           msg.includes("rejected") ||
           msg.includes("denied") ||
           msg.includes("cancelled") ||
           msg.includes("User rejected");
-        const friendlyMsg = isRejection
-          ? "Transaction was rejected in wallet"
-          : msg;
+        // Detect insufficient funds
+        const isInsufficientFunds =
+          msg.includes("insufficient_funds") ||
+          msg.includes("Insufficient funds");
+
+        let friendlyMsg: string;
+        if (isRejection) {
+          friendlyMsg = "Transaction was rejected in wallet";
+        } else if (isInsufficientFunds) {
+          friendlyMsg = "Insufficient USDC balance. Get testnet USDC at faucet.circle.com";
+        } else {
+          friendlyMsg = msg;
+        }
 
         setError(friendlyMsg);
         setStatus("error");
         return { data: null, status: "error", error: friendlyMsg };
       }
     },
-    [walletClient]
+    [walletClient, fetchWithPayment]
   );
 
   const reset = useCallback(() => {

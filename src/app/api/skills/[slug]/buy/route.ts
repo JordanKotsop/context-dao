@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withX402 } from "x402-next";
 import { getSkillBySlug } from "@/lib/skills";
-import { x402Config } from "@/lib/x402";
+import { x402Config, getSkillBuyConfig } from "@/lib/x402";
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   const segments = request.nextUrl.pathname.split("/");
+  // pathname: /api/skills/{slug}/buy → segments[-2] = slug
   const slug = segments[segments.length - 2];
 
   const skill = getSkillBySlug(slug);
@@ -22,10 +23,17 @@ async function handler(request: NextRequest): Promise<NextResponse> {
   });
 }
 
-export const GET = withX402(handler, x402Config.walletAddress, {
-  price: "$5.00",
-  network: x402Config.network,
-  config: {
-    description: "Buy: Full source access to this cognitive asset",
-  },
-});
+// Dynamic route config: reads slug from URL to get per-skill pricing
+export const GET = withX402(
+  handler,
+  x402Config.walletAddress,
+  async (request: NextRequest) => {
+    const segments = request.nextUrl.pathname.split("/");
+    const slug = segments[segments.length - 2];
+    const skill = getSkillBySlug(slug);
+    // Use skill-specific price or default to $5.00
+    const price = skill?.metadata.price_buy ?? 5.0;
+    const name = skill?.metadata.name ?? "Unknown Skill";
+    return getSkillBuyConfig(price, name);
+  }
+);
