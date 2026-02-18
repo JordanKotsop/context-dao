@@ -45,6 +45,9 @@ export default async function MarketplacePage({
         </Link>
         <nav className="flex items-center gap-6 text-sm text-white/50">
           <span className="text-white">Marketplace</span>
+          <Link href="/league" className="transition-colors hover:text-white/80">
+            League
+          </Link>
           <Link href="/" className="transition-colors hover:text-white/80">
             Home
           </Link>

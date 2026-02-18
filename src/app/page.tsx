@@ -149,6 +149,12 @@ export default function HomePage() {
               <MagneticButton href="/marketplace">
                 Browse Marketplace
               </MagneticButton>
+              <a
+                href="/league"
+                className="inline-flex items-center gap-2 px-6 py-4 border border-white/20 text-white/70 font-medium text-lg rounded-full hover:border-lime/40 hover:text-white transition-colors"
+              >
+                Validation League
+              </a>
             </motion.div>
             <motion.p
               initial={{ opacity: 0 }}
