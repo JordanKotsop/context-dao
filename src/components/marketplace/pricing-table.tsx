@@ -1,4 +1,6 @@
 import type { SkillMetadata } from "@/lib/skills";
+import { BuyButton } from "@/components/marketplace/buy-button";
+import { RentPanel } from "@/components/marketplace/rent-panel";
 
 interface PricingTableProps {
   metadata: SkillMetadata;
@@ -35,9 +37,11 @@ export function PricingTable({ metadata, slug }: PricingTableProps) {
               Modify and customize freely
             </li>
           </ul>
-          <button className="w-full rounded-xl bg-lime py-2.5 text-sm font-semibold text-black transition-colors hover:bg-lime-hover">
-            Buy via x402
-          </button>
+          <BuyButton
+            slug={slug}
+            skillName={metadata.name}
+            price={metadata.price_buy}
+          />
         </div>
 
         {/* Rent option */}
@@ -66,9 +70,11 @@ export function PricingTable({ metadata, slug }: PricingTableProps) {
               ~{metadata.token_estimate} tokens per call
             </li>
           </ul>
-          <button className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/10">
-            Rent via x402
-          </button>
+          <RentPanel
+            slug={slug}
+            skillName={metadata.name}
+            price={metadata.price_rent}
+          />
         </div>
       </div>
 
