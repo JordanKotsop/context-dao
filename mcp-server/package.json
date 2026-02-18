@@ -1,0 +1,26 @@
+{
+  "name": "context-dao-mcp",
+  "version": "0.1.0",
+  "description": "ContextDAO MCP Server — Agent-native skill discovery and purchase",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "context-dao-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.76.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}
