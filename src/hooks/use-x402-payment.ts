@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useWalletClient } from "wagmi";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
+import { ExactEvmSchemeV1 } from "@x402/evm/v1";
 import type { WalletClient } from "viem";
 
 /**
@@ -70,6 +71,11 @@ export function useX402Payment() {
             {
               network: "eip155:*",
               client: new ExactEvmScheme(signer),
+            },
+            {
+              network: "base-sepolia" as `${string}:${string}`,
+              client: new ExactEvmSchemeV1(signer),
+              x402Version: 1,
             },
           ],
         });
