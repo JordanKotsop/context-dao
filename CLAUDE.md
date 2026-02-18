@@ -1,5 +1,7 @@
 # 🎓 Welcome to Your Learning Sandbox!
 
+All visual designs and inspiration are in the design research folder. Always find inspiration and refer to it when designing new things.
+
 ## You're Learning Claude Code — I'm Here to Help!
 
 This is YOUR safe space to experiment, learn, and build. There's no wrong way to explore here. Ask me anything!
