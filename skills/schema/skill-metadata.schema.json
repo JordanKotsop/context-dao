@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contextdao.com/schemas/skill-metadata.json",
+  "title": "ContextDAO Skill Metadata",
+  "description": "Schema for cognitive asset (.md skill) YAML frontmatter metadata",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "author",
+    "description",
+    "category",
+    "price_buy",
+    "price_rent",
+    "token_estimate",
+    "created",
+    "tags"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable skill name",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version (major.minor.patch)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "author": {
+      "type": "string",
+      "description": "Skill creator's identifier (GitHub username or wallet address)"
+    },
+    "description": {
+      "type": "string",
+      "description": "One-paragraph description of what this skill does",
+      "maxLength": 500
+    },
+    "category": {
+      "type": "string",
+      "description": "Hierarchical category path",
+      "pattern": "^[a-z]+(/[a-z]+)*$",
+      "examples": ["finance/tax", "development/review", "persona/philosophy"]
+    },
+    "price_buy": {
+      "type": "number",
+      "description": "One-time purchase price in USD for raw .md source access",
+      "minimum": 0
+    },
+    "price_rent": {
+      "type": "number",
+      "description": "Per-inference-call price in USD for blind inference rental",
+      "minimum": 0
+    },
+    "token_estimate": {
+      "type": "integer",
+      "description": "Estimated token count of the system prompt",
+      "minimum": 1
+    },
+    "accuracy_score": {
+      "type": ["number", "null"],
+      "description": "Validation league accuracy score (0-100). Null if not yet validated.",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "created": {
+      "type": "string",
+      "description": "ISO 8601 date when the skill was created",
+      "format": "date"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Searchable tags for discovery",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "minItems": 1,
+      "maxItems": 10
+    },
+    "model_preference": {
+      "type": "string",
+      "description": "Recommended LLM model for optimal performance",
+      "examples": ["claude-sonnet-4-6", "gpt-4o", "claude-haiku-4-5"]
+    },
+    "license": {
+      "type": "string",
+      "description": "License for the skill content",
+      "enum": ["proprietary", "cc-by-4.0", "cc-by-sa-4.0", "cc-by-nc-4.0", "mit"],
+      "default": "proprietary"
+    }
+  },
+  "additionalProperties": false
+}

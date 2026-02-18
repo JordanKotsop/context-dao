@@ -1,0 +1,66 @@
+{
+  "skill": "code-review-expert",
+  "version": "1.0.0",
+  "questions": [
+    {
+      "input": "Review this code:\n```python\nimport os\ndef run_command(user_input):\n    os.system(f'ls {user_input}')\n```",
+      "expected_output": "contains: command injection, os.system, sanitize, subprocess, Critical",
+      "match_type": "keyword",
+      "weight": 2.0
+    },
+    {
+      "input": "Review this:\n```typescript\nconst API_KEY = 'sk-1234567890abcdef';\nfetch(`https://api.example.com/data?key=${API_KEY}`)\n```",
+      "expected_output": "contains: hardcoded, secret, environment variable, exposed, Critical",
+      "match_type": "keyword",
+      "weight": 2.0
+    },
+    {
+      "input": "Review this:\n```python\ndef get_users(db):\n    users = db.query('SELECT * FROM users')\n    for user in users:\n        user['orders'] = db.query(f'SELECT * FROM orders WHERE user_id = {user[\"id\"]}')\n    return users\n```",
+      "expected_output": "contains: N+1, SQL injection, parameterized, batch, JOIN",
+      "match_type": "keyword",
+      "weight": 1.5
+    },
+    {
+      "input": "Review this:\n```typescript\nfunction processItems(items: any[]) {\n    const result: any = {};\n    for (let i = 0; i <= items.length; i++) {\n        result[items[i].id] = items[i];\n    }\n    return result;\n}\n```",
+      "expected_output": "contains: any, off-by-one, <=, undefined, type",
+      "match_type": "keyword",
+      "weight": 1.5
+    },
+    {
+      "input": "Review this:\n```typescript\nasync function fetchData() {\n    try {\n        const res = await fetch('/api/data');\n        const data = await res.json();\n        return data;\n    } catch (e) {\n        // ignore\n    }\n}\n```",
+      "expected_output": "contains: swallowed error, catch, logging, undefined, error handling",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "Review this and tell me what's good about it:\n```typescript\nexport async function GET(request: Request) {\n    const { searchParams } = new URL(request.url);\n    const id = searchParams.get('id');\n    if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });\n    const data = await db.select().from(users).where(eq(users.id, id));\n    if (!data.length) return Response.json({ error: 'Not found' }, { status: 404 });\n    return Response.json(data[0]);\n}\n```",
+      "expected_output": "contains: Positive, validation, error handling, status code, parameterized",
+      "match_type": "llm_judge",
+      "weight": 1.0
+    },
+    {
+      "input": "Review this React component:\n```tsx\nfunction UserList({ users }) {\n    return (\n        <div>\n            {users.map(user => (\n                <div>{user.name}</div>\n            ))}\n        </div>\n    )\n}\n```",
+      "expected_output": "contains: key, prop, type, missing",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "Review this:\n```python\ndef calculate_total(items):\n    total = 0\n    for item in items:\n        for discount in item.discounts:\n            for rule in discount.rules:\n                if rule.applies(item):\n                    total += item.price * (1 - rule.percentage)\n    return total\n```",
+      "expected_output": "contains: nested, complexity, readability, extract, function",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "Is this code ready to merge?\n```go\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    userID := r.URL.Query().Get(\"user_id\")\n    rows, err := db.Query(\"SELECT * FROM users WHERE id = $1\", userID)\n    if err != nil {\n        http.Error(w, err.Error(), 500)\n        return\n    }\n    defer rows.Close()\n    json.NewEncoder(w).Encode(rows)\n}\n```",
+      "expected_output": "contains: error message, internal, leak, 500, rows iteration",
+      "match_type": "keyword",
+      "weight": 1.0
+    },
+    {
+      "input": "I wrote 2000 lines in a single file. Is that okay?",
+      "expected_output": "contains: split, single responsibility, module, maintain, file size",
+      "match_type": "keyword",
+      "weight": 1.0
+    }
+  ]
+}
