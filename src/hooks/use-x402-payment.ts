@@ -153,6 +153,14 @@ export function useX402Payment() {
         const isChainMismatch =
           msg.includes("chainId should be same as current chainId") ||
           msg.includes("Failed to switch to chain");
+        // The x402.org facilitator only supports testnet networks.
+        // When payments are attempted on mainnet (e.g., "base"), the facilitator
+        // returns "unexpected_verify_error" / "unexpected_error" because it cannot
+        // verify transactions on chains it does not support.
+        const isFacilitatorUnsupported =
+          msg.includes("unexpected_error") ||
+          msg.includes("unexpected_verify_error") ||
+          msg.includes("unexpected_settle_error");
 
         let friendlyMsg: string;
         if (isRejection) {
@@ -161,6 +169,11 @@ export function useX402Payment() {
           friendlyMsg = "Insufficient USDC balance. Get testnet USDC at faucet.circle.com";
         } else if (isChainMismatch) {
           friendlyMsg = "Wrong network. Please switch to Base Sepolia in your wallet and try again.";
+        } else if (isFacilitatorUnsupported) {
+          friendlyMsg =
+            "Payment verification failed: the facilitator does not support this network. " +
+            "The default x402.org facilitator only supports testnet (Base Sepolia). " +
+            "A mainnet-compatible facilitator is required for Base mainnet payments.";
         } else {
           friendlyMsg = msg;
         }

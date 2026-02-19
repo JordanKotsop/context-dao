@@ -15,14 +15,53 @@ if (walletAddress === ZERO_ADDRESS) {
 }
 
 // Supported x402 V1 network names for EVM chains.
-// Set X402_NETWORK env var to "base" for mainnet, "base-sepolia" for testnet.
-// This type must be a subset of the x402-next RouteConfig network type.
+// Set X402_NETWORK env var to "base-sepolia" for testnet (default).
+//
+// IMPORTANT: The default x402.org facilitator only supports TESTNET networks
+// (base-sepolia, solana-devnet). Mainnet networks like "base", "polygon", etc.
+// require a self-hosted facilitator or a facilitator that supports mainnet.
+// See: https://x402.org/facilitator/supported
 type X402Network = "base-sepolia" | "base" | "polygon" | "polygon-amoy";
+
+// Networks supported by the default x402.org facilitator (V1 protocol).
+// Queried from https://x402.org/facilitator/supported on 2026-02-19.
+const DEFAULT_FACILITATOR_SUPPORTED_NETWORKS = [
+  "base-sepolia",
+  "solana-devnet",
+];
+
+const network = (process.env.X402_NETWORK ?? "base-sepolia") as X402Network;
+const facilitatorUrl =
+  process.env.X402_FACILITATOR_URL ?? "https://x402.org/facilitator";
+
+// Warn at startup if using the default facilitator with an unsupported mainnet network
+if (
+  facilitatorUrl === "https://x402.org/facilitator" &&
+  !DEFAULT_FACILITATOR_SUPPORTED_NETWORKS.includes(network)
+) {
+  console.error(
+    "\n" +
+      "========================================================\n" +
+      `  ERROR: X402_NETWORK="${network}" is NOT supported by the\n` +
+      "  default x402.org facilitator!\n" +
+      "  \n" +
+      "  The x402.org facilitator only supports testnet networks:\n" +
+      `  ${DEFAULT_FACILITATOR_SUPPORTED_NETWORKS.join(", ")}\n` +
+      "  \n" +
+      "  All payment verifications will FAIL with 'unexpected_error'.\n" +
+      "  \n" +
+      "  To fix, either:\n" +
+      '  1. Set X402_NETWORK=base-sepolia for testnet payments\n' +
+      "  2. Set X402_FACILITATOR_URL to a facilitator that supports\n" +
+      `     the "${network}" network (e.g., self-hosted facilitator)\n` +
+      "========================================================\n"
+  );
+}
 
 export const x402Config = {
   walletAddress,
-  network: (process.env.X402_NETWORK ?? "base-sepolia") as X402Network,
-  facilitatorUrl: process.env.X402_FACILITATOR_URL ?? "https://x402.org/facilitator",
+  network,
+  facilitatorUrl,
 };
 
 /**

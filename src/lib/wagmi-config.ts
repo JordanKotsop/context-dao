@@ -7,7 +7,7 @@ import {
   rabbyWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { baseSepolia, base } from "wagmi/chains";
-import { http } from "wagmi";
+import { http, fallback } from "wagmi";
 
 // WalletConnect Cloud projectId. When set to a real ID (from https://cloud.walletconnect.com),
 // WalletConnect-based wallets (mobile QR, Rainbow, etc.) will work. When not set, we only
@@ -19,6 +19,11 @@ const walletConnectProjectId =
 const hasWalletConnectId =
   walletConnectProjectId.length > 0 && walletConnectProjectId !== "demo";
 
+// Custom RPC URL for Base mainnet. The default public RPC (mainnet.base.org) is
+// heavily rate-limited (429 errors). Set NEXT_PUBLIC_BASE_RPC_URL to a dedicated
+// provider (e.g., Alchemy, QuickNode, Infura) for reliable mainnet operation.
+const baseMainnetRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
+
 export const wagmiConfig = getDefaultConfig({
   appName: "ContextDAO",
   // RainbowKit requires projectId as a string even if unused. Pass the env var
@@ -27,7 +32,11 @@ export const wagmiConfig = getDefaultConfig({
   chains: [baseSepolia, base],
   transports: {
     [baseSepolia.id]: http(),
-    [base.id]: http(),
+    // Use a dedicated RPC if configured, with public RPC as fallback.
+    // The default mainnet.base.org is heavily rate-limited and returns 429.
+    [base.id]: baseMainnetRpcUrl
+      ? fallback([http(baseMainnetRpcUrl), http()])
+      : http(),
   },
   ssr: true,
   // When no real WalletConnect projectId is configured, restrict to browser-extension
